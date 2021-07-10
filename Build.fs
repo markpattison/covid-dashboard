@@ -47,10 +47,6 @@ Target.create "Run" (fun _ ->
     |> runParallel
 )
 
-Target.create "Format" (fun _ ->
-    run dotnet "fantomas . -r" "src"
-)
-
 open Fake.Core.TargetOperators
 
 let dependencies = [
