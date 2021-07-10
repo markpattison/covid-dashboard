@@ -3,6 +3,8 @@ framework: net5.0
 storage: none
 
 nuget Fable.Remoting.Giraffe
+nuget FSharp.Data
+nuget SharpKml.Core
 nuget Saturn
 
 nuget Fable.Core
