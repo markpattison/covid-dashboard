@@ -7,6 +7,8 @@ open Saturn
 
 open Shared
 
+let allData = 
+
 let covidMapApi =
     { getDates = fun () -> async { return [||] }
       getData = fun () -> async { return [||] }
@@ -26,5 +28,13 @@ let app =
         use_static "public"
         use_gzip
     }
+
+// let ltlaData = Async.RunSynchronously (CovidData.getData LowerTierLocalAuthority)
+// let populations = Populations.read "./data/population_estimates.csv"
+// let boundaries = Geography.readBoundaries "./data/Local_Authority_Districts__December_2019__Boundaries_UK_BUC.kml"
+
+// let joined = JoinData.join ltlaData populations boundaries
+
+// printfn "LTLAs: %i" joined.Length
 
 run app

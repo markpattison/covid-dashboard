@@ -24,11 +24,17 @@ type CovidRates =
     }
 
 type ONSCode = | ONSCode of string
+type AreaName = | AreaName of string
+
+type AreaType =
+    | Region
+    | UpperTierLocalAuthority
+    | LowerTierLocalAuthority
 
 type Area =
     {
         ONSCode: ONSCode
-        Name: string
+        Name: AreaName
         Boundary: Boundary
         Data: CovidRates option
     }
