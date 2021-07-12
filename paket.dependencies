@@ -6,6 +6,7 @@ nuget Fable.Remoting.Giraffe
 nuget FSharp.Data
 nuget SharpKml.Core
 nuget Saturn
+nuget UKCovid19
 
 nuget Fable.Core
 nuget Fable.Elmish
