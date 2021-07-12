@@ -22,7 +22,8 @@ type ApiData () =
     member val NewCases : float = 0.0 with get, set
 
 let private apiForAreaType areatype =
-    let filters = dict [ "areaType", areatype ] |> Dictionary
+    //let filters = dict [ "areaType", areatype ] |> Dictionary
+    let filters = dict [ "areaType", areatype; "date", "2021-01-01" ] |> Dictionary
     let structure = dict [ "Date", "date"; "NewCases", "newCasesBySpecimenDate"; "AreaCode", "areaCode" ] |> Dictionary
     let props = UkCovid19Props(FiltersType = filters, StructureType = structure)
     Cov19Api(props)

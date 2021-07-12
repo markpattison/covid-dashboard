@@ -1,23 +1,31 @@
 module Server
 
-open System
 open Fable.Remoting.Server
 open Fable.Remoting.Giraffe
+open Microsoft.AspNetCore.Http
+open Microsoft.Extensions.Caching.Memory
+open Microsoft.Extensions.DependencyInjection
 open Saturn
 
 open Shared
 
-let allData = 
+// let allData = 
 
-let covidMapApi =
-    { getDates = fun () -> async { return [||] }
+let withCacheFromContext f (context: HttpContext) =
+    let cache = context.GetService<IMemoryCache>()
+    f cache
+
+let covidMapApi cache =
+    { getDates = fun () -> async {
+        let x = Cache.ltlaJoined cache |> Async.RunSynchronously
+        return [||] }
       getData = fun () -> async { return [||] }
     }
 
 let webApp =
     Remoting.createApi ()
     |> Remoting.withRouteBuilder Route.builder
-    |> Remoting.fromValue covidMapApi
+    |> Remoting.fromContext (withCacheFromContext covidMapApi)
     |> Remoting.buildHttpHandler
 
 let app =
@@ -27,6 +35,7 @@ let app =
         memory_cache
         use_static "public"
         use_gzip
+        service_config (fun s -> s.AddMemoryCache())
     }
 
 // let ltlaData = Async.RunSynchronously (CovidData.getData LowerTierLocalAuthority)
