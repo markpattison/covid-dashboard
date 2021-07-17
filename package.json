@@ -13,6 +13,8 @@
         "mini-css-extract-plugin": "^0.10.0",
         "react": "^16.10.2",
         "react-dom": "^16.10.2",
+        "react-leaflet": "^2.8.0",
+        "react-leaflet-control": "^2.1.2",
         "remotedev": "^0.2.9",
         "sass": "^1.34.0",
         "sass-loader": "^9.0.3",
