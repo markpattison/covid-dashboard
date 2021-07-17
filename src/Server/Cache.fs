@@ -30,7 +30,7 @@ let getCached (cacheKey: CacheKey) (f: IMemoryCache -> 'a) (cache: IMemoryCache)
             printfn "Found %s in cache" cacheKey.DisplayAs
             return result
         | _ ->
-            let stopwatch = System.Diagnostics.Stopwatch()
+            let stopwatch = Diagnostics.Stopwatch()
             stopwatch.Start()
 
             let getLazy = lazy f cache
@@ -66,10 +66,7 @@ let dates : IMemoryCache -> Async<DateTime []> = getCached Dates (fun cache ->
         let allDates =
             ltla
             |> Map.toSeq
-            |> Seq.collect (fun (_, areaData) ->
-                areaData.NewCasesBySpecimenDate
-                |> Map.toSeq
-                |> Seq.map fst)
+            |> Seq.collect (fun (_, areaData) -> areaData.NewCasesBySpecimenDate |> Map.toSeq |> Seq.map fst)
             |> Seq.distinct
             |> Seq.sort
             |> Seq.toArray

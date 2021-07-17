@@ -34,12 +34,4 @@ let app =
         service_config (fun s -> s.AddMemoryCache())
     }
 
-// let ltlaData = Async.RunSynchronously (CovidData.getData LowerTierLocalAuthority)
-// let populations = Populations.read "./data/population_estimates.csv"
-// let boundaries = Geography.readBoundaries "./data/Local_Authority_Districts__December_2019__Boundaries_UK_BUC.kml"
-
-// let joined = JoinData.join ltlaData populations boundaries
-
-// printfn "LTLAs: %i" joined.Length
-
 run app
