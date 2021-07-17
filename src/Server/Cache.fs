@@ -9,72 +9,49 @@ type CacheKey =
     | Boundaries
     | LtlaData
     | LtlaJoined
+    member this.DisplayAs =
+        match this with
+        | Populations -> "population"
+        | Boundaries -> "boundary"
+        | LtlaData -> "LTLA covid rates"
+        | LtlaJoined -> "joined LTLA"
 
-let populations (cache: IMemoryCache) =
+let getCached (cacheKey: CacheKey) (f: IMemoryCache -> 'a) (cache: IMemoryCache) =
     async {
-        printfn "Asking for population data..."
-        match cache.TryGetValue Populations with
-        | true, ( :? Lazy<Map<ONSCode, float>> as lazyResult ) ->
+        printfn "Asking for %s data..." cacheKey.DisplayAs
+
+        match cache.TryGetValue cacheKey with
+        | true, ( :? Lazy<'a> as lazyResult ) ->
             let result = lazyResult.Value
-            printfn "Population data from cache"
+
+            printfn "Found %s data in cache" cacheKey.DisplayAs
             return result
         | _ ->
-            let lazyResult = lazy (Populations.read "./data/population_estimates.csv")
-            cache.Set(Populations, lazyResult) |> ignore
-            let result = lazyResult.Value
-            printfn "Population data"
+            let stopwatch = System.Diagnostics.Stopwatch()
+            stopwatch.Start()
+
+            let getLazy = lazy f cache
+            cache.Set(cacheKey, getLazy) |> ignore
+            let result = getLazy.Value
+
+            printfn "Calculated %s data in %ims" cacheKey.DisplayAs stopwatch.ElapsedMilliseconds
+
             return result
     }
 
-let boundaries (cache: IMemoryCache) =
+let populations = getCached Populations (fun _ -> Populations.read "./data/population_estimates.csv")
+
+let boundaries = getCached Boundaries (fun _ -> Geography.readBoundaries "./data/Local_Authority_Districts__December_2019__Boundaries_UK_BUC.kml")
+
+let ltlaData = getCached LtlaData (fun _ -> CovidData.getData LowerTierLocalAuthority |> Async.RunSynchronously)
+
+let ltlaJoined : IMemoryCache -> Async<Area []> = getCached LtlaJoined (fun cache ->
     async {
-        printfn "Asking for boundary data..."
-        match cache.TryGetValue Boundaries with
-        | true, ( :? Lazy<(ONSCode * AreaName * Boundary) array> as lazyResult ) ->
-            let result = lazyResult.Value
-            printfn "Boundary data from cache"
-            return result
-        | _ ->
-            let lazyResult = lazy (Geography.readBoundaries "./data/Local_Authority_Districts__December_2019__Boundaries_UK_BUC.kml")
-            cache.Set(Boundaries, lazyResult) |> ignore
-            let result = lazyResult.Value
-            printfn "Boundary data"
-            return result
-    }
+        let! pop = populations cache
+        let! bounds = boundaries cache
+        let! ltla = ltlaData cache
 
-let ltlaData (cache: IMemoryCache) =
-    async {
-        printfn "Asking for LTLA data..."
-        match cache.TryGetValue LtlaData with
-        | true, ( :? Lazy<Map<ONSCode, CovidData.AreaData>> as lazyResult ) ->
-            let result = lazyResult.Value
-            printfn "LTLA data from cache"
-            return result
-        | _ ->
-            let lazyResult = lazy (CovidData.getData LowerTierLocalAuthority |> Async.RunSynchronously)
-            cache.Set(LtlaData, lazyResult) |> ignore
-            let result = lazyResult.Value
-            printfn "LTLA data"
-            return result
-    }
+        let result = JoinData.join ltla pop bounds
 
-let ltlaJoined (cache: IMemoryCache) =
-    async {
-        printfn "Asking for joined data..."
-        match cache.TryGetValue LtlaJoined with
-        | true, ( :? Lazy<Area []> as lazyResult ) ->
-            let result = lazyResult.Value
-            printfn "Joined data from cache"
-            return result
-        | _ ->
-            let! pop = populations cache
-            let! bounds = boundaries cache
-            let! ltla = ltlaData cache
-
-            let lazyResult = lazy (JoinData.join ltla pop bounds)
-            cache.Set(LtlaJoined, lazyResult) |> ignore
-
-            let result = lazyResult.Value
-            printfn "Joined data"
-            return result
-    }
+        return result
+    } |> Async.RunSynchronously)
