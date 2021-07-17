@@ -1,5 +1,6 @@
 module Cache
 
+open System
 open Microsoft.Extensions.Caching.Memory
 
 open Shared
@@ -9,22 +10,24 @@ type CacheKey =
     | Boundaries
     | LtlaData
     | LtlaJoined
+    | Dates
     member this.DisplayAs =
         match this with
-        | Populations -> "population"
-        | Boundaries -> "boundary"
+        | Populations -> "population data"
+        | Boundaries -> "boundary data"
         | LtlaData -> "LTLA covid rates"
-        | LtlaJoined -> "joined LTLA"
+        | LtlaJoined -> "joined LTLA data"
+        | Dates -> "dates"
 
 let getCached (cacheKey: CacheKey) (f: IMemoryCache -> 'a) (cache: IMemoryCache) =
     async {
-        printfn "Asking for %s data..." cacheKey.DisplayAs
+        printfn "Asking for %s..." cacheKey.DisplayAs
 
         match cache.TryGetValue cacheKey with
         | true, ( :? Lazy<'a> as lazyResult ) ->
             let result = lazyResult.Value
 
-            printfn "Found %s data in cache" cacheKey.DisplayAs
+            printfn "Found %s in cache" cacheKey.DisplayAs
             return result
         | _ ->
             let stopwatch = System.Diagnostics.Stopwatch()
@@ -34,7 +37,7 @@ let getCached (cacheKey: CacheKey) (f: IMemoryCache -> 'a) (cache: IMemoryCache)
             cache.Set(cacheKey, getLazy) |> ignore
             let result = getLazy.Value
 
-            printfn "Calculated %s data in %ims" cacheKey.DisplayAs stopwatch.ElapsedMilliseconds
+            printfn "Calculated %s in %ims" cacheKey.DisplayAs stopwatch.ElapsedMilliseconds
 
             return result
     }
@@ -47,11 +50,29 @@ let ltlaData = getCached LtlaData (fun _ -> CovidData.getData LowerTierLocalAuth
 
 let ltlaJoined : IMemoryCache -> Async<Area []> = getCached LtlaJoined (fun cache ->
     async {
-        let! pop = populations cache
-        let! bounds = boundaries cache
         let! ltla = ltlaData cache
+        let! bounds = boundaries cache
+        let! pop = populations cache
 
         let result = JoinData.join ltla pop bounds
 
         return result
+    } |> Async.RunSynchronously)
+
+let dates : IMemoryCache -> Async<DateTime []> = getCached Dates (fun cache ->
+    async {
+        let! ltla = ltlaData cache
+
+        let allDates =
+            ltla
+            |> Map.toSeq
+            |> Seq.collect (fun (_, areaData) ->
+                areaData.NewCasesBySpecimenDate
+                |> Map.toSeq
+                |> Seq.map fst)
+            |> Seq.distinct
+            |> Seq.sort
+            |> Seq.toArray
+        
+        return allDates
     } |> Async.RunSynchronously)

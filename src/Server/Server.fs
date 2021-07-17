@@ -9,17 +9,13 @@ open Saturn
 
 open Shared
 
-// let allData = 
-
 let withCacheFromContext f (context: HttpContext) =
     let cache = context.GetService<IMemoryCache>()
     f cache
 
 let covidMapApi cache =
-    { getDates = fun () -> async {
-        let x = Cache.ltlaJoined cache |> Async.RunSynchronously
-        return [||] }
-      getData = fun () -> async { return [||] }
+    { getDates = fun () -> Cache.dates cache
+      getData = fun () -> Cache.ltlaJoined cache
     }
 
 let webApp =
