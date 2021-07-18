@@ -18,12 +18,12 @@ let navButtons =
     [ Field.div
         [ Field.IsGrouped ]
         [ navButton "twitter" "https://twitter.com/mark_pattison" Fa.Brand.Twitter "Twitter"
-          navButton "github" "https://github.com/markpattison/map-demo" Fa.Brand.Github "GitHub" ] ]
+          navButton "github" "https://github.com/markpattison/covid-dashboard" Fa.Brand.Github "GitHub" ] ]
 
 let view =
   Navbar.navbar [ Navbar.Color IsPrimary ]
     [ Navbar.Brand.div []
         [ Navbar.Item.div []
-            [ Heading.h4 [] [ str "Map Data Visualisation with F# and Fable" ] ] ]
+            [ Heading.h4 [] [ str "Covid Dashboard" ] ] ]
       Navbar.End.div []
         [ navButtons ] ]
