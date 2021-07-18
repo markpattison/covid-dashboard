@@ -7,7 +7,15 @@
     <ItemGroup>
         <None Include="index.html" />
         <None Include="paket.references" />
-        <Compile Include="Index.fs" />
+        <Compile Include="Types.fs" />
+        <Compile Include="LeafletHelpers.fs" />
+        <Compile Include="State.fs" />
+        <Compile Include="Navbar.fs" />
+        <Compile Include="Colours.fs" />
+        <Compile Include="DateButtons.fs" />
+        <Compile Include="MapLegend.fs" />
+        <Compile Include="CovidMap.fs" />
+        <Compile Include="View.fs" />
         <Compile Include="App.fs" />
     </ItemGroup>
     <ItemGroup>
